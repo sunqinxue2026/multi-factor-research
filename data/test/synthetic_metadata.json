@@ -1,0 +1,8 @@
+{
+  "source": "synthetic/test",
+  "market": "TEST",
+  "price_type": "未复权",
+  "data_as_of": "2025-01-06",
+  "is_synthetic": true,
+  "universe_description": "两只虚构股票的手工样本，无历史成分股或退市覆盖"
+}
