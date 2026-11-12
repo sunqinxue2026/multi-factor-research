@@ -4,3 +4,4 @@ numpy>=1.26,<2.3; python_version < "3.11"
 numpy>=1.26,<2.4; python_version >= "3.11"
 pytest>=8,<9; python_version < "3.11"
 pytest>=8,<10; python_version >= "3.11"
+matplotlib>=3.8,<3.11
