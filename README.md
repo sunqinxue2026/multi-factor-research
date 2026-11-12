@@ -4,7 +4,7 @@ Python Multi-Factor Stock Selection and Research System
 
 面向量化开发学习与求职展示的分阶段研究项目。目标链路为：行情整理 → 因子 → 横截面预处理 → IC/RankIC与分组 → 综合评分 → 定期选股 → 回测适配 → 研究报告。
 
-**当前仅第一阶段（设计）和第二阶段（数据层）已验收。第三至第八阶段尚未实现，不能将本仓库视为完整多因子策略或盈利模型。**
+**第一至第三阶段均已由负责人验收通过；第四至第八阶段尚未实现，不能将本仓库视为完整多因子策略或盈利模型。**
 
 ## 已实现
 
@@ -66,7 +66,7 @@ symbol,trade_date,open,high,low,close,volume,amount
 |---|---|---|
 | 1 | 架构、数据结构、因子公式和计划 | 已验收 |
 | 2 | 数据读取、整理和交易日历 | 已验收 |
-| 3 | 动量、波动率、均线偏离因子 | 未开始 |
+| 3 | 动量、波动率、均线偏离因子 | 已验收 |
 | 4 | 截尾、标准化和方向统一 | 未开始 |
 | 5 | IC、RankIC及分组分析 | 未开始 |
 | 6 | 多因子评分及定期调仓 | 未开始 |
@@ -79,7 +79,7 @@ symbol,trade_date,open,high,low,close,volume,amount
 
 第二阶段已有41项pytest通过记录，具体环境和本次仓库发布验证见[开发进度](docs/开发进度.md)。测试覆盖具体值，而非仅判断不报错；追加未来数据的历史不变性仅针对已覆盖案例，不代表全部系统不存在前视偏差。
 
-尚无因子、IC、调仓、数据库写入、回测或网页功能；MySQL、SciPy、Matplotlib属于后续计划，不是当前已实现依赖。未验证真实多股票数据及权威日历。没有历史股票池和退市数据，不能宣称消除幸存者偏差。状态未知不等于可成交；文件摘要不证明数据真实或历史可获得性。
+尚无IC、调仓、数据库写入、回测或网页功能；MySQL、SciPy、Matplotlib属于后续计划，不是当前已实现依赖。未验证真实多股票数据及权威日历。没有历史股票池和退市数据，不能宣称消除幸存者偏差。状态未知不等于可成交；文件摘要不证明数据真实或历史可获得性。
 
 ## 中文文档
 
@@ -91,3 +91,16 @@ symbol,trade_date,open,high,low,close,volume,amount
 - [面试知识整理](docs/面试知识整理.md)
 
 仓库仅提交源码、测试、合成教学数据、依赖和文档；不提交虚拟环境、IDE配置、数据库、运行报告、真实行情或凭据。每阶段独立验证，负责人验收后再推进。
+
+## 第三阶段：基础因子（已验收）
+
+新增[因子模块](src/multi_factor_research/factors.py)、[24项因子测试](tests/test_factors.py)和[合成演示入口](scripts/calculate_factors.py)。支持20/60及自定义N≥2窗口：动量使用N+1个连续有效收盘；波动率使用N个日收益样本标准差；均线偏离保留原始符号。状态保留，valid不是可投资资格。
+
+```text
+python -I -X utf8 scripts/calculate_factors.py --windows 3 --output reports/stage3_hand_run
+python -I -X utf8 scripts/calculate_factors.py --output reports/stage3_default_run
+```
+
+输出为factors.csv与summary.json，目录已存在时拒绝覆盖。入口只生成两只虚构证券的80日教学样本，不是任意CSV导入入口；实际面板通过calculate_factors API接入。
+
+本阶段最终全量65项通过：Python3.10.11/Pandas2.3.3/NumPy2.2.6/pytest8.4.2，pip check通过；另在3.12.14/Pandas3.1.1/NumPy2.5.4/pytest9.2.0通过。后者NumPy超出声明范围，只是额外环境证据，不代表声明内3.12依赖矩阵验证。详细失败修复、手算及限制见[第三阶段验收](docs/第三阶段_基础因子实现与验收.md)。
