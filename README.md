@@ -4,7 +4,7 @@ Python Multi-Factor Stock Selection and Research System
 
 面向量化开发学习与求职展示的分阶段研究项目。目标链路为：行情整理 → 因子 → 横截面预处理 → IC/RankIC与分组 → 综合评分 → 定期选股 → 回测适配 → 研究报告。
 
-**第一至第三阶段均已由负责人验收通过；第四至第八阶段尚未实现，不能将本仓库视为完整多因子策略或盈利模型。**
+**第一至第三阶段已验收；第四阶段预处理已实现并验证，等待验收；第五至第八阶段未实现。本仓库不是完整策略或盈利模型。**
 
 ## 已实现
 
@@ -67,13 +67,13 @@ symbol,trade_date,open,high,low,close,volume,amount
 | 1 | 架构、数据结构、因子公式和计划 | 已验收 |
 | 2 | 数据读取、整理和交易日历 | 已验收 |
 | 3 | 动量、波动率、均线偏离因子 | 已验收 |
-| 4 | 截尾、标准化和方向统一 | 未开始 |
+| 4 | 截尾、标准化和方向统一 | 已实现，待验收 |
 | 5 | IC、RankIC及分组分析 | 未开始 |
 | 6 | 多因子评分及定期调仓 | 未开始 |
 | 7 | 项目一回测接口适配 | 未开始 |
 | 8 | 可视化、完整验证和研究报告 | 未开始 |
 
-第三阶段预计使用历史窗口计算因子，未来收益标签与评分隔离。项目一当前为单股票引擎，多股票共享现金组合仍需接口评审，尚未接入，不能通过平均单股收益替代。
+第三阶段使用历史窗口计算因子，第四阶段按同日截面处理；未来收益标签与评分隔离。项目一当前为单股票引擎，多股票共享现金组合仍需接口评审，尚未接入，不能通过平均单股收益替代。
 
 ## 测试与边界
 
@@ -104,3 +104,16 @@ python -I -X utf8 scripts/calculate_factors.py --output reports/stage3_default_r
 输出为factors.csv与summary.json，目录已存在时拒绝覆盖。入口只生成两只虚构证券的80日教学样本，不是任意CSV导入入口；实际面板通过calculate_factors API接入。
 
 本阶段最终全量65项通过：Python3.10.11/Pandas2.3.3/NumPy2.2.6/pytest8.4.2，pip check通过；另在3.12.14/Pandas3.1.1/NumPy2.5.4/pytest9.2.0通过。后者NumPy超出声明范围，只是额外环境证据，不代表声明内3.12依赖矩阵验证。详细失败修复、手算及限制见[第三阶段验收](docs/第三阶段_基础因子实现与验收.md)。
+
+## 第四阶段：因子预处理（待验收）
+
+[预处理模块](src/multi_factor_research/preprocessing.py)按日期、因子和窗口分组：默认1%/99%线性分位数截尾、至少5只、ddof=0 Z-score，动量+1/波动率−1/偏离−1。明确停牌或未上市排除，未知状态保留并审计，不代表可投资。少样本和零方差输出无效，不填0。原始值与原因保留。
+
+```text
+python -I -X utf8 scripts/preprocess_factors.py --output reports/stage4_my_run
+python -I -X utf8 scripts/preprocess_factors.py --windows 3 --no-clip --output reports/stage4_no_clip_run
+```
+
+入口生成8只虚构证券的80日教学数据，输出preprocessed_factors.csv、cross_section_audit.csv、summary.json；拒绝覆盖目录。真实因子通过preprocess_factors API传入。默认演示640条行情、3840行因子、480截面、1936行预处理有效；不是收益证据。
+
+本轮全量95项测试通过（新增30项）：Python3.10.11/Pandas2.3.3/NumPy2.2.6依赖安装和pip check通过；Python3.12.14/Pandas3.1.1/NumPy2.5.4也通过，但此NumPy超出声明范围，仅为额外验证。导出242个有效截面均值近0、总体标准差近1，审计计数及两环境Z-score一致。详见[第四阶段验收](docs/第四阶段_因子预处理与标准化验收.md)。未开始IC、分组、评分、组合或回测适配。
