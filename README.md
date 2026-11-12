@@ -16,7 +16,7 @@ Python Multi-Factor Stock Selection and Research System
 
 ## 快速运行
 
-最低兼容目标为Python 3.10；此前实际验证环境为Python 3.12.14。未完成3.10版本实测。以下命令在Windows项目根目录运行：
+最低兼容目标为Python 3.10；当前前两阶段已在Python 3.10.11及此前Python 3.12.14环境验证。3.10实测依赖为Pandas 2.3.3、NumPy 2.2.6、pytest 8.4.2；不代表全部版本组合均通过。以下命令在Windows项目根目录运行：
 
 ```powershell
 git clone https://github.com/sunqinxue2026/multi-factor-research.git
