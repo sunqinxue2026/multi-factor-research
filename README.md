@@ -81,7 +81,7 @@ symbol,trade_date,open,high,low,close,volume,amount
 
 第二阶段已有41项pytest通过记录，具体环境和本次仓库发布验证见[开发进度](docs/开发进度.md)。测试覆盖具体值，而非仅判断不报错；追加未来数据的历史不变性仅针对已覆盖案例，不代表全部系统不存在前视偏差。
 
-当前已有研究性IC、分组分析、调仓目标计划、独立组合执行适配层和组合绩效计算；已实现Matplotlib图表和静态HTML报告；尚未接入项目一数据库、MySQL、SciPy或交互Web应用。执行层使用合成行情演示共享现金、费用、整手和T+1，未验证真实多股票数据及权威日历。没有历史股票池和退市数据，不能宣称消除幸存者偏差。状态未知不等于可成交；文件摘要不证明数据真实或历史可获得性。
+当前已有研究性IC、分组分析、调仓目标计划、独立组合执行适配层和组合绩效计算；已实现Matplotlib图表和静态HTML报告；尚未接入项目一数据库、MySQL或SciPy；新增可选的Streamlit单机交互界面。执行层使用合成行情演示共享现金、费用、整手和T+1，未验证真实多股票数据及权威日历。没有历史股票池和退市数据，不能宣称消除幸存者偏差。状态未知不等于可成交；文件摘要不证明数据真实或历史可获得性。
 
 ## 中文文档
 
@@ -183,3 +183,13 @@ python -I -X utf8 scripts/run_stage8.py --csv data/test/synthetic_market.csv --m
 相关矩阵口径为原始同窗口因子的每日横截面Pearson系数时间均值；分组曲线沿用非重叠累计，非可执行净值。缺估值图中留空；绩效仍沿用第七阶段跳过缺失估值口径。数据库、真实股票池、基准与真实数据研究未完成，不宣称消除幸存者偏差。报告文件、运行参数和环境均可追溯。
 
 详见[第八阶段验收](docs/第八阶段_可视化与研究报告验收.md)。源码阅读可继续查看`visualization.py`、`report.py`和`scripts/run_stage8.py`。运行产物保持忽略；精选GitHub展示图尚未另行提交。
+
+
+## 可选：中文轻量研究界面
+
+```powershell
+python -m pip install -r requirements-ui.txt
+python -m streamlit run scripts/research_ui.py --server.address 127.0.0.1 --browser.gatherUsageStats false
+```
+
+提供参数配置、合成/外部CSV输入、独立研究运行、历史记录、图表、交易明细、完整报告预览及ZIP/CSV下载。界面直接调用正式第八阶段入口，不改变研究与成交规则。详见[轻量界面使用说明](docs/轻量界面使用说明.md)。本功能为额外展示增强，不改变八阶段验收状态。
