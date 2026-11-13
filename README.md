@@ -2,194 +2,205 @@
 
 Python Multi-Factor Stock Selection and Research System
 
-面向量化开发学习与求职展示的分阶段研究项目。目标链路为：行情整理 → 因子 → 横截面预处理 → IC/RankIC与分组 → 综合评分 → 定期选股 → 回测适配 → 研究报告。
+一个支持多股票日频行情、因子研究和组合历史模拟的 Python 系统。提供中文网页工作台和命令行入口，输出研究图表、交易明细、静态 HTML 报告及可下载的研究结果。
 
-**第一至第八阶段均已验收，当前批准的八阶段开发范围已完成。已实现研究、共享现金模拟与静态报告完整链路，不是实盘系统或盈利模型。**
+## 功能概览
 
-当前还已实现三个基础因子、横截面预处理、未来收益标签、IC／RankIC、分组统计及多因子目标计划，详见各阶段章节。第七阶段已提供独立共享现金执行适配；目标计划与实际成交分别保存。
+| 功能 | 当前支持 |
+|---|---|
+| 数据整理 | 多股票 CSV、来源元数据、显式交易日历、字段与价格校验、缺失记录保留 |
+| 基础因子 | 动量、日收益波动率、均线偏离；默认20日窗口 |
+| 因子预处理 | 同日截面1%/99%分位数截尾、Z-score、因子方向统一、处理审计 |
+| 因子评价 | IC、RankIC、分组收益、高低组收益差、非重叠区间统计 |
+| 组合计划 | 等权或自定义因子权重、排名、Top N、周/月调仓、目标变化 |
+| 历史模拟 | 多股票共享现金、先卖后买、整手、T+1、佣金、税费、滑点及拒单记录 |
+| 绩效与报告 | 净值、收益、回撤、波动率、夏普、换手、10类图表、HTML/CSV/JSON |
+| 中文网页 | 参数设置、文件上传、研究记录切换、图表、表格筛选、报告预览、ZIP下载 |
 
-## 已实现
+八个开发阶段均已验收。网页是研究入口的轻量交互层，不提供实盘交易。
 
-- 兼容项目一八列行情格式，支持多股票CSV、股票代码前导零、联合键唯一及OHLC数值校验。
-- 记录来源、复权口径、单位、数据截至日期和原文件SHA-256。
-- 使用显式交易日历构造股票×日期面板；保留缺失价格，不自动填充行情。
-- 区分真实零值、缺失记录和未知上市／停牌状态；支持逐日状态Python接口及横截面查询。
-- 命令行导出面板和运行摘要，拒绝覆盖已有输出目录。
+## 快速开始：使用中文网页
 
-## 快速运行
+需要 Python 3.10 或以上版本。以下命令适用于 Windows，在项目根目录运行。
 
-最低兼容目标为Python 3.10；当前前两阶段已在Python 3.10.11及此前Python 3.12.14环境验证。3.10实测依赖为Pandas 2.3.3、NumPy 2.2.6、pytest 8.4.2；不代表全部版本组合均通过。以下命令在Windows项目根目录运行：
+### 1. 获取源码并安装
 
 ```powershell
 git clone https://github.com/sunqinxue2026/multi-factor-research.git
 cd multi-factor-research
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -I -X utf8 -m pytest -o pythonpath=src -p no:cacheprovider -q
-.venv\Scripts\python.exe -I -X utf8 scripts/prepare_data.py --csv data/test/synthetic_market.csv --metadata data/test/synthetic_metadata.json --calendar data/test/synthetic_calendar.csv --calendar-source synthetic/calendar --calendar-version v1 --output reports/my_first_run
+.venv\Scripts\python.exe -m pip install -r requirements-ui.txt
 ```
 
-安装命令供使用者创建独立环境；不代表本次在新环境中完成依赖安装验证。每次演示使用不同输出目录，例如`reports/my_second_run`。
+`requirements-ui.txt` 包含研究核心及网页依赖，无需重复安装两份依赖。
 
-### 样例预期
+### 2. 启动网页
 
-仓库样例是明确标注的合成数据和合成日历，不是真实证券数据。
+```powershell
+.venv\Scripts\python.exe -m streamlit run scripts/research_ui.py --server.address 127.0.0.1 --server.port 8519 --browser.gatherUsageStats false
+```
 
-| 股票 | 2025-01-02收盘 | 2025-01-03收盘 | 2025-01-06收盘 |
-|---|---:|---:|---:|
-| 000001 | 11 | 缺失 | 13 |
-| 000002 | 20 | 21 | 缺失 |
+启动后使用终端提示的浏览器入口。保持启动终端运行；结束服务时在该终端按 `Ctrl+C`。若指定位置被其他程序占用，可将 `--server.port` 改为其他未使用的值。不要因此关闭其他项目。
 
-4条行情、2只股票、3个日历日生成6行面板，其中2条缺失记录；4条原始行情的真实可交易性仍未知。0成交量不等于缺失，不自动认定停牌。输出为`panel.csv`和`summary.json`，生成产物不提交Git。
+### 3. 运行一次研究
 
-## 输入契约
+1. 左侧选择“确定性合成数据”，无需上传文件。
+2. 设置窗口、评价周期、分组数、Top N、调仓频率和资金。
+3. 点击“运行研究”，等待完成提示。
+4. 在“查看研究记录”中确认当前记录。
+5. 查看顶部指标，并依次使用“研究图表”“交易与数据”“完整报告”“参数与局限”“下载结果”。
 
-行情CSV必须包含：
+每次运行生成独立记录。默认合成数据用于验证流程，不代表真实投资结论。
+
+**使用文档：** [网页操作说明](docs/轻量界面使用说明.md) · [系统网页使用教程 PDF](docs/系统网页使用教程.pdf)
+
+## 网页参数与结果
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| 因子回看窗口 | 20 | 三个因子共用的交易日窗口，范围2～252 |
+| 未来收益评价周期 | 5、20 | 可多选，仅用于事后评价，不参与当时选股 |
+| 因子分组数 | 5 | 支持5组或10组 |
+| 选股数量 Top N | 5 | 范围1～100；有效候选不足时保留现金 |
+| 调仓频率 | 每周 | 支持每周、每月 |
+| 初始资金 | 100000元 | 范围1000～100000000元 |
+
+网页使用三因子等权、既定因子方向和正式入口的成本配置，目前不能在网页编辑因子权重、方向或费率。确切参数在“参数与局限”中查看。
+
+| 页签 | 用法 |
+|---|---|
+| 研究图表 | 选择IC、RankIC、相关性、分组、净值、回撤、换手或订单图 |
+| 交易与数据 | 选择数据表；存在股票列时可按股票筛选；页面最多显示2000行 |
+| 完整报告 | 阅读当前记录的正式HTML报告；下载请使用下载页签 |
+| 参数与局限 | 核对来源、参数、环境与限制；日志可能属于最近一次运行 |
+| 下载结果 | 先准备完整ZIP，再下载；也可单独下载JSON或CSV |
+
+完整ZIP需要整体解压，保留HTML与图片的相对目录。目标权重不等于实际持仓，订单不等于成交，最终资产不等于现金。
+
+## 使用外部行情
+
+选择“上传外部CSV”，同时上传以下三份文件，并填写日历来源、版本。每份文件最多20MB。
+
+### 行情 CSV
 
 ```csv
 symbol,trade_date,open,high,low,close,volume,amount
+000001,2025-01-02,10,12,9,11,1000,11000
 ```
 
-- 股票代码为字符串，日期使用YYYY-MM-DD；价格须为有效正数，成交量／额非负，允许真正缺失值。
-- 单位为CNY／股／CNY，不自动换算；价格口径必须声明未复权、前复权或后复权。
-- 重复股票日期键、非法字符串数值及错误OHLC关系直接报错，不静默去重。
-- 日历CSV仅含`trade_date`列，明确列出市场开放日期；不会用普通工作日替代交易日历。
-- 来源JSON字段及样例见[data/test/synthetic_metadata.json](data/test/synthetic_metadata.json)。
+- 股票代码保留为文本，日期使用 `YYYY-MM-DD`，股票和日期的联合键必须唯一。
+- 有效价格大于0，成交量和成交额非负；OHLC关系必须合法。
+- 缺失值留空，不用0冒充缺失；不自动前向填充价格。
+- 单位必须为人民币元、股、人民币元，不自动换算手、千元等单位。
 
-## 源码阅读顺序
+### 来源元数据 JSON
 
-1. [data.py](src/multi_factor_research/data.py)：元数据契约、行情检查、显式日历、面板与横截面。
-2. [prepare_data.py](scripts/prepare_data.py)：参数、日志、结果导出和运行摘要。
-3. [test_data.py](tests/test_data.py)：手工数值、缺失／零值、状态边界及历史不变性验证。
-
-## 开发阶段
-
-| 阶段 | 内容 | 状态 |
-|---|---|---|
-| 1 | 架构、数据结构、因子公式和计划 | 已验收 |
-| 2 | 数据读取、整理和交易日历 | 已验收 |
-| 3 | 动量、波动率、均线偏离因子 | 已验收 |
-| 4 | 截尾、标准化和方向统一 | 已验收 |
-| 5 | IC、RankIC及分组分析 | 已验收 |
-| 6 | 多因子评分及定期调仓 | 已验收 |
-| 7 | 项目一回测接口适配 | 已验收 |
-| 8 | 可视化、完整验证和研究报告 | 已验收 |
-
-第三阶段使用历史窗口计算因子，第四阶段按同日截面处理；未来收益标签与评分隔离。项目一当前为单股票引擎，第七阶段在项目二新增独立多股票共享现金执行适配层，未修改项目一，不能通过平均单股收益替代组合执行。
-
-## 测试与边界
-
-第二阶段已有41项pytest通过记录，具体环境和本次仓库发布验证见[开发进度](docs/开发进度.md)。测试覆盖具体值，而非仅判断不报错；追加未来数据的历史不变性仅针对已覆盖案例，不代表全部系统不存在前视偏差。
-
-当前已有研究性IC、分组分析、调仓目标计划、独立组合执行适配层和组合绩效计算；已实现Matplotlib图表和静态HTML报告；尚未接入项目一数据库、MySQL或SciPy；新增可选的Streamlit单机交互界面。执行层使用合成行情演示共享现金、费用、整手和T+1，未验证真实多股票数据及权威日历。没有历史股票池和退市数据，不能宣称消除幸存者偏差。状态未知不等于可成交；文件摘要不证明数据真实或历史可获得性。
-
-## 中文文档
-
-- [开发计划](docs/开发计划.md)
-- [开发进度](docs/开发进度.md)
-- [总体设计与公式](docs/第一阶段_总体设计.md)
-- [第二阶段验收](docs/第二阶段_数据读取与交易日历验收.md)
-- [技术决策](docs/技术决策.md)
-- [面试知识整理](docs/面试知识整理.md)
-
-仓库仅提交源码、测试、合成教学数据、依赖和文档；不提交虚拟环境、IDE配置、数据库、运行报告、真实行情或凭据。每阶段独立验证，负责人验收后再推进。
-
-## 第三阶段：基础因子（已验收）
-
-新增[因子模块](src/multi_factor_research/factors.py)、[24项因子测试](tests/test_factors.py)和[合成演示入口](scripts/calculate_factors.py)。支持20/60及自定义N≥2窗口：动量使用N+1个连续有效收盘；波动率使用N个日收益样本标准差；均线偏离保留原始符号。状态保留，valid不是可投资资格。
-
-```text
-python -I -X utf8 scripts/calculate_factors.py --windows 3 --output reports/stage3_hand_run
-python -I -X utf8 scripts/calculate_factors.py --output reports/stage3_default_run
+```json
+{
+  "source": "用户自备行情",
+  "market": "CN",
+  "price_type": "未复权",
+  "data_as_of": "2025-01-06",
+  "is_synthetic": false,
+  "universe_description": "填写实际证券范围和筛选方式",
+  "includes_delisted": null,
+  "price_unit": "CNY",
+  "volume_unit": "股",
+  "amount_unit": "CNY"
+}
 ```
 
-输出为factors.csv与summary.json，目录已存在时拒绝覆盖。入口只生成两只虚构证券的80日教学样本，不是任意CSV导入入口；实际面板通过calculate_factors API接入。
+内容必须反映实际数据；`price_type` 可为未复权、前复权或后复权。研究价格与执行价格是否适用相同口径，仍需使用者核查；当前系统没有完整公司行动账户处理，不能把复权报价直接解释为实际可成交价格。
 
-本阶段最终全量65项通过：Python3.10.11/Pandas2.3.3/NumPy2.2.6/pytest8.4.2，pip check通过；另在3.12.14/Pandas3.1.1/NumPy2.5.4/pytest9.2.0通过。后者NumPy超出声明范围，只是额外环境证据，不代表声明内3.12依赖矩阵验证。详细失败修复、手算及限制见[第三阶段验收](docs/第三阶段_基础因子实现与验收.md)。
+### 交易日历 CSV
 
-## 第四阶段：因子预处理（已验收）
-
-[预处理模块](src/multi_factor_research/preprocessing.py)按日期、因子和窗口分组：默认1%/99%线性分位数截尾、至少5只、ddof=0 Z-score，动量+1/波动率−1/偏离−1。明确停牌或未上市排除，未知状态保留并审计，不代表可投资。少样本和零方差输出无效，不填0。原始值与原因保留。
-
-```text
-python -I -X utf8 scripts/preprocess_factors.py --output reports/stage4_my_run
-python -I -X utf8 scripts/preprocess_factors.py --windows 3 --no-clip --output reports/stage4_no_clip_run
+```csv
+trade_date
+2025-01-02
+2025-01-03
+2025-01-06
 ```
 
-入口生成8只虚构证券的80日教学数据，输出preprocessed_factors.csv、cross_section_audit.csv、summary.json；拒绝覆盖目录。真实因子通过preprocess_factors API传入。默认演示640条行情、3840行因子、480截面、1936行预处理有效；不是收益证据。
+只允许 `trade_date` 一列，不重复，只列实际开放交易日。行情必须落在日历内，日历与行情不能晚于元数据截至日期。系统不会替用户认证外部日历。当前报告的 `calendar_is_exchange_verified` 固定为 `false`，不代表自动核验过交易所日历。
 
-本轮全量95项测试通过（新增30项）：Python3.10.11/Pandas2.3.3/NumPy2.2.6依赖安装和pip check通过；Python3.12.14/Pandas3.1.1/NumPy2.5.4也通过，但此NumPy超出声明范围，仅为额外验证。导出242个有效截面均值近0、总体标准差近1，审计计数及两环境Z-score一致。详见[第四阶段验收](docs/第四阶段_因子预处理与标准化验收.md)。此为第四阶段历史证据；第五阶段状态见下节，当时评分、组合或回测适配尚未实现；当前目标计划进度见第六阶段。
+要获得有效研究结果，还需要足够的历史长度、横截面股票数和可计算价格；极短样本可能成功输出但没有有效评分或IC。
 
-## 第五阶段：因子评价（已验收）
+## 命令行使用
 
-[分析模块](src/multi_factor_research/analysis.py)提供下一开盘至H日后开盘标签、原始/定向值Pearson IC和平均秩RankIC、非年化ICIR、五组/十组收益及风险汇总。分组先按当日因子确定成员，缺标签整组无效；累计采用固定锚点非重叠区间，预热后缺口阻断。不是可执行组合收益，也不提供有效alpha结论。
-
-```text
-python -I -X utf8 scripts/analyze_factors.py --windows 20 60 --horizons 5 20 --groups 5 --output reports/stage5_my_run
-```
-
-输出五类评价CSV、标签CSV及summary.json；目录必须未存在。演示为15只虚构证券、100个教学日期：1500行情、3000标签/2595有效、2400 IC记录/1124有效、6000分组/2810有效、60组风险汇总。累计值挂在信号日但到exit_date才实现，不能用作当日已知净值。图表绘制留第八阶段。
-
-本阶段全量118项通过：Python3.10.11/Pandas2.3.3/NumPy2.2.6/pytest8.4.2及当前3.12环境；声明内依赖和pip check证据来自3.10。新增23项，包含手算、并列、时序、非重叠及缺口。详见[第五阶段验收](docs/第五阶段_因子有效性与分组分析验收.md)。
-
-## 第六阶段：多因子评分与调仓计划（已验收）
-
-前三因子默认20日、定向值各1/3，全部有效才评分；Top5可配置，同分按代码；每只1/N、不足留现金。周/月末信号，下一显式交易日计划执行，日历尾部未确认周期跳过。显式记录退出、现金及含现金的目标单边换手。**这是目标计划，不是实际持仓、成交换手或策略收益**；费用、滑点及共享现金执行留第七阶段。
-
-```text
-python -I -X utf8 scripts/plan_portfolio.py --output reports/stage6_my_run
-python -I -X utf8 scripts/plan_portfolio.py --frequency monthly --output reports/stage6_my_monthly
-```
-
-目录必须未存在。输出scores.csv、target_weights.csv、target_changes.csv、rebalances.csv及summary.json。15只虚构股票、100个工作日教学位置，非权威交易所日历：1500行情、1500评分/1200有效；周20次计划/4次全现金，月4次/0次全现金。不使用未来收益标签选股。
-
-本阶段实际全量146项测试（新增28项）在Python3.10.11/Pandas2.3.3/NumPy2.2.6及Python3.12.14/Pandas3.1.1/NumPy2.5.4通过；3.12的NumPy超声明范围，仅额外证据，3.10依赖安装及pip check通过。导出权重、换手、时序和两环境评分核对通过。详见[第六阶段验收](docs/第六阶段_多因子组合与定期调仓验收.md)。第七阶段当前状态见下节。
-
-
-## 第七阶段：组合执行与绩效串接（已验收）
-
-新增`execution.py`、`performance.py`、`execute_portfolio.py`、`run_stage7.py`及对应测试。`run_stage7.py`已将数据整理、20日因子、预处理、等权Top5评分、周调仓、共享现金执行和组合绩效串成一个可运行入口。
-
-```text
-python -I -X utf8 scripts/run_stage7.py --output reports/stage7_my_run
-python -I -X utf8 scripts/execute_portfolio.py --output reports/stage7_execution_only
-```
-
-完整演示使用15只合成证券和100个教学交易日，输出1500条行情、1500行评分、1200行有效评分、20次调仓、41笔订单和41笔成交。绩效模块沿用项目一的首日收益、峰值回撤、年化收益、年化波动率和夏普公式，但不使用项目一仅适用于单股票完整买卖配对的胜率统计。合成数据结果不代表策略有效性。
-
-本阶段全量152项测试已在当前环境通过；Python 3.10.11独立环境安装声明依赖、`pip check`、全量152项测试和完整入口均通过。第七阶段未接入项目一数据库、Matplotlib图表或网页，也未建模涨跌停、停牌撮合、公司行动、历史股票池和真实交易。详见[第七阶段验收](docs/第七阶段_项目一回测接口适配与组合执行验收.md)。
-
-
-## 第八阶段：可视化与研究报告（已验收）
-
-最终入口串接数据、因子、预处理、IC/RankIC与分组研究、评分调仓、共享现金执行、正式绩效和静态报告。默认沿用第七阶段15只股票100日确定性合成行情：
-
-```text
-python -I -X utf8 scripts/run_stage8.py --output reports/stage8_my_run
-```
-
-输出31个文件：中文研究报告HTML、10张PNG、19张CSV和summary.json。打开生成的研究报告即可浏览；图片为相对引用，移动报告时应保留完整输出目录。不要只复制HTML。输出目录必须不存在。
-
-外部CSV支持第二阶段8列契约，必须同时提供来源JSON与显式交易日历：
-
-```text
-python -I -X utf8 scripts/run_stage8.py --csv data/test/synthetic_market.csv --metadata data/test/synthetic_metadata.json --calendar data/test/synthetic_calendar.csv --calendar-source synthetic/calendar --calendar-version v1 --output reports/stage8_external
-```
-
-额外参数：`--window 20 --horizons 5 20 --groups 5 --top-n 5 --frequency weekly --initial-cash 100000`。短样例没有足够因子历史，预期全现金、无有效IC，不代表失败。
-
-实际验证：Python3.10.11/Pandas2.3.3/NumPy2.2.6/Matplotlib3.10.9独立安装及pip check通过，全量166项通过；当前3.12环境也166项通过（NumPy超原声明上限，属于额外环境证据）。完整演示41笔成交、最终资产86294.93元，与第七阶段一致；合成负收益不是投资研究结论。
-
-相关矩阵口径为原始同窗口因子的每日横截面Pearson系数时间均值；分组曲线沿用非重叠累计，非可执行净值。缺估值图中留空；绩效仍沿用第七阶段跳过缺失估值口径。数据库、真实股票池、基准与真实数据研究未完成，不宣称消除幸存者偏差。报告文件、运行参数和环境均可追溯。
-
-详见[第八阶段验收](docs/第八阶段_可视化与研究报告验收.md)。源码阅读可继续查看`visualization.py`、`report.py`和`scripts/run_stage8.py`。运行产物保持忽略；精选GitHub展示图尚未另行提交。
-
-
-## 可选：中文轻量研究界面
+不使用网页时，只需安装 `requirements.txt`。
 
 ```powershell
-python -m pip install -r requirements-ui.txt
-python -m streamlit run scripts/research_ui.py --server.address 127.0.0.1 --browser.gatherUsageStats false
+.venv\Scripts\python.exe -I -X utf8 scripts/run_stage8.py --output reports/research_001
 ```
 
-提供参数配置、合成/外部CSV输入、独立研究运行、历史记录、图表、交易明细、完整报告预览及ZIP/CSV下载。界面直接调用正式第八阶段入口，不改变研究与成交规则。详见[轻量界面使用说明](docs/轻量界面使用说明.md)。本功能为额外展示增强，不改变八阶段验收状态。
+调整参数：
+
+```powershell
+.venv\Scripts\python.exe -I -X utf8 scripts/run_stage8.py --window 20 --horizons 5 20 --groups 5 --top-n 5 --frequency monthly --initial-cash 100000 --output reports/research_002
+```
+
+外部数据：
+
+```powershell
+.venv\Scripts\python.exe -I -X utf8 scripts/run_stage8.py --csv data/market.csv --metadata data/metadata.json --calendar data/calendar.csv --calendar-source user-calendar --calendar-version v1 --output reports/research_003
+```
+
+输出目录必须尚未存在。完整入口生成19张CSV、10张PNG、中文HTML报告和JSON摘要。网页调用同一个入口，不另写计算逻辑。
+
+## 代码结构
+
+```text
+src/multi_factor_research/
+  data.py             行情校验、交易日历与面板
+  factors.py          三个基础因子
+  preprocessing.py    横截面处理和审计
+  analysis.py         标签、IC、RankIC与分组
+  portfolio.py        综合评分与调仓目标
+  execution.py        共享现金执行和账户快照
+  performance.py      组合绩效
+  visualization.py    研究图表
+  report.py           一致性检查与报告导出
+scripts/
+  run_stage8.py       完整命令行入口
+  research_ui.py      中文网页入口
+  其他阶段脚本         分模块运行入口
+ tests/               自动化测试
+ data/test/           小型合成契约样例
+ docs/                使用教程、需求、设计、阶段验收记录
+```
+
+研究评价与交易决策分离：未来收益标签仅进入IC与分组分析；综合评分只读取历史因子的预处理结果。信号在收盘后确定，计划在下一显式交易日开盘执行。
+
+## 测试与兼容性
+
+```powershell
+.venv\Scripts\python.exe -I -X utf8 -m pytest -o pythonpath=src -p no:cacheprovider -q
+```
+
+既有研究核心全量测试记录为166项通过，覆盖手算、缺失窗口、历史不变性、目标权重、现金核算、报告一致性及重复运行。核心曾在Python 3.10与3.12环境验证；不表示所有依赖版本组合均通过。网页有当前环境的交互验证记录，尚无独立Python 3.10网页依赖矩阵验证。部分Streamlit接口存在已知弃用提示。
+
+## 数据与结果管理
+
+- GitHub保留源码、测试、依赖、合成契约样例和项目文档。
+- `reports/`、虚拟环境、缓存、数据库、本机配置及非白名单数据由Git忽略。
+- 上传数据保存在本机研究目录，不自动提交GitHub；下载包可能含原始数据，分享前检查许可。
+- 阶段文档用于追溯设计与验收，不替代当前使用教程；旧记录按当时环境解释。
+
+## 限制与适用范围
+
+- 不提供实盘下单、多人任务队列、账号管理或公网部署配置。
+- 没有完整历史成分股、退市样本、公司行动、涨跌停与成交量撮合约束，未消除幸存者偏差。
+- 未接入MySQL/SQLAlchemy持久化，没有SciPy显著性检验；它们不是当前已实现功能。
+- 分组和高低组收益是研究统计，不是含全部执行约束的账户收益。重叠标签下ICIR不能作为独立样本显著性结论。
+- 目标换手与实际换手定义不同；缺失估值不填充，绩效沿用跳过无效估值的口径，跨缺口收益不应当作严格日收益。
+- 输出不是原子写入，失败可能保留部分文件；网页单次研究等待上限为120秒。
+
+## 项目文档
+
+- [需求说明书](docs/需求说明书.md)
+- [总体设计](docs/第一阶段_总体设计.md)
+- [开发计划](docs/开发计划.md)与[开发进度](docs/开发进度.md)
+- [技术决策](docs/技术决策.md)
+- [阶段八验收报告](docs/第八阶段_可视化与研究报告验收.md)
+
+其他阶段验收与学习资料保留在 `docs`，用于查看实现过程。
